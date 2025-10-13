@@ -1,0 +1,61 @@
+Hex String Test Cases:
+
+Input: hex-encoded string of hex digits that has an even number of
+
+digits
+
+Output: Hex String Converted to Raw Byte Array
+
+Null String
+d8
+d83
+efgh
+0123456789abcdef
+49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d
+(Max length string)
+
+--------------------------------------------------------------------
+
+Base64 Encoded Test Cases:
+
+Input: Raw Byte Array
+
+Output: Base64 Encoded String
+
+(Null String) --> Error
+
+M --> TQ==
+
+Ma --> TWE=
+
+Man --> TWFu
+
+abcd --> YWJjZA==
+
+light w --> bGlnaHQgdw==
+
+light wo --> bGlnaHQgd28=
+
+light wor --> bGlnaHQgd29y
+
+light work --> 	bGlnaHQgd29yaw==
+
+light work. --> bGlnaHQgd29yay4=
+
+Many hands make light work. --> TWFueSBoYW5kcyBtYWtlIGxpZ2h0IHdvcmsu
+
+RFC 4648 Test Cases
+
+Test Vectors
+
+   BASE64("f") = "Zg=="
+
+   BASE64("fo") = "Zm8="
+
+   BASE64("foo") = "Zm9v"
+
+   BASE64("foob") = "Zm9vYg=="
+
+   BASE64("fooba") = "Zm9vYmE="
+
+   BASE64("foobar") = "Zm9vYmFy"

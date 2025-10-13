@@ -1,0 +1,32 @@
+The below test cases test for converting raw byte array to hex:
+
+Null String
+d8
+d83
+efgh
+0123456789abcdef
+49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d
+deadbeef
+(Max length string)
+
+Use the above test cases as the two required string CLI arguments.
+
+If XOR arr works the outcome will be a NULL-byte string of the same
+
+length as the inputs.
+
+Other than that finish up with the CLI argument strings of Challenge
+
+1 Set 2
+
+You can also do the following test cases:
+
+Arg1		Arg2
+
+00		00
+
+01		01
+
+...
+
+ff		ff
