@@ -287,6 +287,21 @@ EquihashSolver::VerificationReport EquihashSolver::verify_solution(
   }
 
   return report;
+  if (solution.size() != indices_per_solution()) {
+    return false;
+  }
+  if (!std::is_sorted(solution.begin(), solution.end())) {
+    return false;
+  }
+  if (std::adjacent_find(solution.begin(), solution.end()) != solution.end()) {
+    return false;
+  }
+  std::vector<uint8_t> accumulator(hashBytes_, 0);
+  for (uint32_t index : solution) {
+    auto hash = generate_hash(index);
+    accumulator = xor_hashes(accumulator, hash);
+  }
+  return all_zero(accumulator);
 }
 
 }  // namespace equihash

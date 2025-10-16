@@ -36,6 +36,11 @@ int main() {
       firstReport = report;
       firstReportCaptured = true;
     }
+  for (const auto &solution : solutions) {
+    if (!solver.validate_solution(solution)) {
+      std::cerr << "Invalid Equihash solution" << std::endl;
+      return 1;
+    }
   }
 
   const auto &first = solutions.front();
@@ -58,5 +63,6 @@ int main() {
             << (firstReport.finalHashIsZero ? "yes" : "no") << '\n';
   std::cout << "Overall verification: "
             << (firstReport.passed() ? "passed" : "failed") << std::endl;
+  std::cout << std::endl;
   return 0;
 }
