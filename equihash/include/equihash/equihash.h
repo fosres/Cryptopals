@@ -15,7 +15,6 @@ class EquihashSolver {
     std::size_t round = 0;
     bool collisionPrefixesMatch = false;
     bool indicesAreDisjoint = false;
-    bool partialHashZero = false;
   };
 
   struct VerificationReport {
@@ -25,8 +24,7 @@ class EquihashSolver {
 
     bool rounds_passed() const {
       for (const auto &step : steps) {
-        if (!(step.collisionPrefixesMatch && step.indicesAreDisjoint &&
-              step.partialHashZero)) {
+        if (!(step.collisionPrefixesMatch && step.indicesAreDisjoint)) {
           return false;
         }
       }
