@@ -14,6 +14,28 @@ int main() {
     return 1;
   }
 
+  EquihashSolver::VerificationReport firstReport;
+  bool firstReportCaptured = false;
+  for (const auto &solution : solutions) {
+    auto report = solver.verify_solution(solution);
+    if (!report.passed()) {
+      std::cerr << "Invalid Equihash solution" << std::endl;
+      std::cerr << "  Size and order valid: "
+                << (report.sizeAndOrderValid ? "yes" : "no") << '\n';
+      for (const auto &step : report.steps) {
+        std::cerr << "  Round " << step.round << ": prefixes "
+                  << (step.collisionPrefixesMatch ? "match" : "mismatch")
+                  << ", indices "
+                  << (step.indicesAreDisjoint ? "disjoint" : "overlap") << '\n';
+      }
+      std::cerr << "  Final hash zero: "
+                << (report.finalHashIsZero ? "yes" : "no") << std::endl;
+      return 1;
+    }
+    if (!firstReportCaptured) {
+      firstReport = report;
+      firstReportCaptured = true;
+    }
   for (const auto &solution : solutions) {
     if (!solver.validate_solution(solution)) {
       std::cerr << "Invalid Equihash solution" << std::endl;
@@ -28,6 +50,19 @@ int main() {
   for (uint32_t value : first) {
     std::cout << ' ' << value;
   }
+  std::cout << "\nVerification steps:\n";
+  std::cout << "  Size and order valid: "
+            << (firstReport.sizeAndOrderValid ? "yes" : "no") << '\n';
+  for (const auto &step : firstReport.steps) {
+    std::cout << "  Round " << step.round << ": prefixes "
+              << (step.collisionPrefixesMatch ? "match" : "mismatch")
+              << ", indices "
+              << (step.indicesAreDisjoint ? "disjoint" : "overlap") << '\n';
+  }
+  std::cout << "  Final hash zero: "
+            << (firstReport.finalHashIsZero ? "yes" : "no") << '\n';
+  std::cout << "Overall verification: "
+            << (firstReport.passed() ? "passed" : "failed") << std::endl;
   std::cout << std::endl;
   return 0;
 }

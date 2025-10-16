@@ -205,6 +205,88 @@ std::vector<EquihashSolver::Solution> EquihashSolver::solve(std::size_t initialC
 }
 
 bool EquihashSolver::validate_solution(const Solution &solution) const {
+  return verify_solution(solution).passed();
+}
+
+EquihashSolver::VerificationReport EquihashSolver::verify_solution(
+    const Solution &solution) const {
+  VerificationReport report;
+  report.sizeAndOrderValid = solution.size() == indices_per_solution() &&
+                             std::is_sorted(solution.begin(), solution.end()) &&
+                             std::adjacent_find(solution.begin(), solution.end()) ==
+                                 solution.end();
+  if (!report.sizeAndOrderValid) {
+    return report;
+  }
+
+  struct Node {
+    std::vector<uint8_t> hash;
+    Solution indices;
+  };
+
+  std::vector<Node> current;
+  current.reserve(solution.size());
+  for (uint32_t index : solution) {
+    Node node;
+    node.hash = generate_hash(index);
+    node.indices = Solution{ index };
+    current.push_back(std::move(node));
+  }
+
+  for (std::size_t round = 0; round < k_; ++round) {
+    VerificationStep step;
+    step.round = round;
+    step.collisionPrefixesMatch = true;
+    step.indicesAreDisjoint = true;
+
+    const std::size_t bitOffset = round * collisionBitLength_;
+    std::stable_sort(current.begin(), current.end(), [&](const Node &lhs, const Node &rhs) {
+      return extract_bits(lhs.hash, bitOffset, collisionBitLength_) <
+             extract_bits(rhs.hash, bitOffset, collisionBitLength_);
+    });
+
+    std::vector<Node> next;
+    next.reserve(current.size() / 2);
+    std::size_t groupStart = 0;
+    while (groupStart < current.size()) {
+      const uint64_t prefix =
+          extract_bits(current[groupStart].hash, bitOffset, collisionBitLength_);
+      std::size_t groupEnd = groupStart + 1;
+      while (groupEnd < current.size() &&
+             extract_bits(current[groupEnd].hash, bitOffset, collisionBitLength_) ==
+                 prefix) {
+        ++groupEnd;
+      }
+      if ((groupEnd - groupStart) % 2 != 0) {
+        step.collisionPrefixesMatch = false;
+        step.indicesAreDisjoint = false;
+        report.steps.push_back(step);
+        return report;
+      }
+      for (std::size_t i = groupStart; i < groupEnd; i += 2) {
+        const Node &a = current[i];
+        const Node &b = current[i + 1];
+        if (!are_disjoint(a.indices, b.indices)) {
+          step.indicesAreDisjoint = false;
+        }
+        Node combined;
+        combined.indices = merge_indices(a.indices, b.indices);
+        combined.hash = xor_hashes(a.hash, b.hash);
+        next.push_back(std::move(combined));
+      }
+      groupStart = groupEnd;
+    }
+    report.steps.push_back(step);
+    current = std::move(next);
+  }
+
+  if (current.size() == 1) {
+    report.finalHashIsZero = all_zero(current.front().hash);
+  } else {
+    report.finalHashIsZero = false;
+  }
+
+  return report;
   if (solution.size() != indices_per_solution()) {
     return false;
   }
