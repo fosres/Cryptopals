@@ -238,7 +238,6 @@ EquihashSolver::VerificationReport EquihashSolver::verify_solution(
     step.round = round;
     step.collisionPrefixesMatch = true;
     step.indicesAreDisjoint = true;
-    step.partialHashZero = true;
 
     const std::size_t bitOffset = round * collisionBitLength_;
     std::stable_sort(current.begin(), current.end(), [&](const Node &lhs, const Node &rhs) {
@@ -261,7 +260,6 @@ EquihashSolver::VerificationReport EquihashSolver::verify_solution(
       if ((groupEnd - groupStart) % 2 != 0) {
         step.collisionPrefixesMatch = false;
         step.indicesAreDisjoint = false;
-        step.partialHashZero = false;
         report.steps.push_back(step);
         return report;
       }
@@ -274,21 +272,11 @@ EquihashSolver::VerificationReport EquihashSolver::verify_solution(
         Node combined;
         combined.indices = merge_indices(a.indices, b.indices);
         combined.hash = xor_hashes(a.hash, b.hash);
-
-        const std::size_t zeroPrefixBits = (round + 1) * collisionBitLength_;
-        if (extract_bits(combined.hash, 0, zeroPrefixBits) != 0) {
-          step.partialHashZero = false;
-        }
-
         next.push_back(std::move(combined));
       }
       groupStart = groupEnd;
     }
     report.steps.push_back(step);
-    if (!(step.collisionPrefixesMatch && step.indicesAreDisjoint &&
-          step.partialHashZero)) {
-      return report;
-    }
     current = std::move(next);
   }
 
@@ -299,6 +287,21 @@ EquihashSolver::VerificationReport EquihashSolver::verify_solution(
   }
 
   return report;
+  if (solution.size() != indices_per_solution()) {
+    return false;
+  }
+  if (!std::is_sorted(solution.begin(), solution.end())) {
+    return false;
+  }
+  if (std::adjacent_find(solution.begin(), solution.end()) != solution.end()) {
+    return false;
+  }
+  std::vector<uint8_t> accumulator(hashBytes_, 0);
+  for (uint32_t index : solution) {
+    auto hash = generate_hash(index);
+    accumulator = xor_hashes(accumulator, hash);
+  }
+  return all_zero(accumulator);
 }
 
 }  // namespace equihash
